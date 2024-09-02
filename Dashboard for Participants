@@ -1,0 +1,18 @@
+function consolidateData() {
+  const masterSheet = SpreadsheetApp.openById('1vyv3ohCPDILqxvaznRuNIOQGFkNBZrld_lrBCR4aElo').getActiveSheet(); 
+  const classroomSheetIds = ['1jtS8L_PP9LfuEmrh0MjbCywxTIY3m93qClMN37PKLNw', '15Uu2U0PNXiRWsEBl8saWH4vj9bf7ALVLNnDBgakpNXs', '1G6kiuVZJArzeYikR2B7tkKml5TwG2pmC7bGwINF2msw']; // Replace with the Sheet IDs of individual classroom sheets
+
+  masterSheet.clear(); // Clear previous data
+  masterSheet.appendRow(['Timestamp', 'Email', 'Score', 'Next Classroom Status', 'Classroom No']);
+
+  classroomSheetIds.forEach((sheetId, index) => {
+    const sheet = SpreadsheetApp.openById(sheetId).getActiveSheet();
+    const data = sheet.getDataRange().getValues();
+
+    for (let i = 1; i < data.length; i++) {
+      const rowData = data[i];
+      const relevantData = [rowData[0], rowData[1], rowData[2], rowData[4], 'Classroom ' + (index + 1)]; // Extract relevant columns
+      masterSheet.appendRow(relevantData);
+    }
+  });
+}
