@@ -1,0 +1,53 @@
+function sendNextClassroomCode() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const range = sheet.getDataRange();
+  const values = range.getValues();
+
+  const codeMapping = {
+    "Classroom 1": "y2gwjlm",
+    "Classroom 2": "next-classroom-code",
+  };
+
+  for (let i = 1; i < values.length; i++) { 
+    const row = values[i];
+    const timestamp = row[0];
+    const email = row[1];
+    const scoreStr = row[2].toString().trim(); 
+    const classroom = row[3];
+    const sentStatus = row[4]; 
+
+    Logger.log(`Processing row ${i}: Email=${email}, Score=${scoreStr}, Classroom=${classroom}, Sent=${sentStatus}`);
+
+    const scoreParts = scoreStr.split('/');
+    const score = parseInt(scoreParts[0].trim(), 10);
+
+    if (score >= 7 && sentStatus !== 'Sent') {
+      const nextClassroomCode = codeMapping[classroom];
+
+      if (nextClassroomCode) {
+        Logger.log(`Sending email to ${email} with classroom code ${nextClassroomCode}`);
+
+        MailApp.sendEmail({
+          to: email,
+          subject: "Congratulations on Passing the Quiz!",
+          htmlBody: `<p>Dear Student,</p>
+                     <p>Congratulations on passing the quiz for ${classroom}! We're excited to see your progress.</p>
+                     <p>Here is your code for the next classroom: <strong>${nextClassroomCode}</strong></p>
+                     <p>Keep up the great work!</p>
+                     <p>Best regards,<br>Your Training Team</p>`,
+          inlineImages: {
+            congratImage: DriveApp.getFileById('1NnD6tu89kpZBkDOi92Hoz1NCzo8ZmcbT').getBlob() 
+          }
+        });
+
+        sheet.getRange(i + 1, 5).setValue('Sent');
+        Logger.log(`Email sent to: ${email}`);
+      } else {
+        Logger.log(`No classroom code found for classroom: ${classroom}`);
+      }
+    } else if (score < 7 && sentStatus !== 'Failed') {
+      sheet.getRange(i + 1, 5).setValue('Failed');
+      Logger.log(`Student failed the quiz: ${email}`);
+    }
+  }
+}
